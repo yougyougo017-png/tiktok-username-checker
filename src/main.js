@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 
@@ -58,6 +59,49 @@ ipcMain.handle('export', async (_e, text) => {
   if (filePath) fs.writeFileSync(filePath, text);
   return !!filePath;
 });
+
+// ---------- Proxy scraper ----------
+const PROXY_SOURCES = [
+  ['ProxyScrape HTTP', 'http', 'https://api.proxyscrape.com/v2/?request=getproxies&protocol=http&timeout=10000&country=all'],
+  ['ProxyScrape SOCKS5', 'socks5', 'https://api.proxyscrape.com/v2/?request=getproxies&protocol=socks5&timeout=10000&country=all'],
+  ['TheSpeedX HTTP', 'http', 'https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt'],
+  ['TheSpeedX SOCKS5', 'socks5', 'https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt'],
+  ['monosans HTTP', 'http', 'https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt'],
+  ['monosans SOCKS5', 'socks5', 'https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt'],
+  ['clarketm', 'http', 'https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt'],
+  ['ShiftyTR HTTP', 'http', 'https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt'],
+  ['jetkai HTTP', 'http', 'https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt'],
+  ['roosterkid HTTPS', 'https', 'https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt'],
+  ['mmpx12 HTTP', 'http', 'https://raw.githubusercontent.com/mmpx12/proxy-list/master/http.txt'],
+  ['hookzof SOCKS5', 'socks5', 'https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt'],
+  ['sunny9577', 'http', 'https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt'],
+  ['proxifly HTTP', 'http', 'https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/http/data.txt'],
+  ['proxy-list.download', 'http', 'https://www.proxy-list.download/api/v1/get?type=http']
+];
+ipcMain.handle('proxy-sources', () => PROXY_SOURCES.map(([name, type]) => ({ name, type })));
+ipcMain.handle('proxy-scrape', async (e, indexes) => {
+  const all = new Map();
+  await Promise.all(indexes.map(async (i) => {
+    const [name, type, url] = PROXY_SOURCES[i];
+    try {
+      const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 15000);
+      const res = await fetch(url, { headers: { 'User-Agent': UA }, signal: ctrl.signal });
+      clearTimeout(t);
+      const found = (await res.text()).match(/\b\d{1,3}(?:\.\d{1,3}){3}:\d{2,5}\b/g) || [];
+      found.forEach(p => { if (!all.has(p)) all.set(p, type); });
+      e.sender.send('proxy-progress', { i, ok: true, count: found.length });
+    } catch (err) { e.sender.send('proxy-progress', { i, ok: false, count: 0 }); }
+  }));
+  return [...all].map(([addr, type]) => ({ addr, type }));
+});
+// Quick check: can we open a connection to the proxy's port in time?
+ipcMain.handle('proxy-test', (_e, addr, timeout) => new Promise((resolve) => {
+  const [host, port] = addr.split(':'); const start = Date.now();
+  const s = net.connect({ host, port: +port });
+  const done = (ok) => { s.destroy(); resolve({ addr, ok, ms: Date.now() - start }); };
+  s.setTimeout(timeout || 4000, () => done(false));
+  s.on('connect', () => done(true)); s.on('error', () => done(false));
+}));
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

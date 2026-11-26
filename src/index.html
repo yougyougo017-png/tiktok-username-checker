@@ -182,6 +182,13 @@ select option{background:#071433}
 .empty b{display:block;color:#fff;font-size:15px;margin-bottom:6px}
 .spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(141,182,255,.3);border-top-color:#8DB6FF;animation:spin .8s linear infinite;display:inline-block;vertical-align:-2px}
 
+.srcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.src{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;background:rgba(3,10,28,.45);border:1px solid rgba(255,255,255,.06);font-size:13px;cursor:pointer;transition:.2s}
+.src:hover{border-color:var(--goldstroke)}
+.src input{accent-color:#FFD700;width:15px;height:15px}
+.src .t{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:#8DB6FF;margin-left:auto}
+.src .c{font:12px var(--mono);color:var(--muted);min-width:44px;text-align:right}
+.src .c.ok{color:var(--ok)}.src .c.bad{color:var(--bad)}
 .view{display:none}.view.on{display:block;animation:in .4s ease}
 .toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,30px);opacity:0;padding:12px 18px;border-radius:14px;background:rgba(7,20,51,.9);border:1px solid var(--goldstroke);backdrop-filter:blur(20px);font-size:13px;z-index:9;transition:.35s;box-shadow:0 20px 40px -10px rgba(0,0,0,.6)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -204,6 +211,7 @@ select option{background:#071433}
       <div class="label">Workspace</div>
       <button class="on" data-view="checker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>TikTok</button>
       <button data-view="checker" data-platform="discord"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7c2.5-1 5.5-1 8 0l1.5 1.5c1.3 2.2 2 4.7 2 7.5-1.5 1.3-3 2-4.5 2.5l-1-2M8 7 6.5 8.5c-1.3 2.2-2 4.7-2 7.5 1.5 1.3 3 2 4.5 2.5l1-2M8.5 16c2.3 1 4.7 1 7 0"/><circle cx="9.5" cy="12.5" r="1"/><circle cx="14.5" cy="12.5" r="1"/></svg>Discord</button>
+      <button data-view="proxies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>Proxy Scraper</button>
       <button data-view="vault"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 15 8.5 22 9.3 17 14l1.3 7L12 17.8 5.7 21 7 14 2 9.3l7-.8z"/></svg>Gold Vault</button>
       <button data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
     </nav>
@@ -288,6 +296,38 @@ select option{background:#071433}
             <div class="filters"><button class="on" data-f="all">All</button><button data-f="available">Available</button><button data-f="taken">Taken</button></div>
           </div>
           <div class="list" id="results"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROXIES -->
+    <section class="view" id="v-proxies">
+      <div class="stats" style="margin-top:0">
+        <div class="card stat"><div class="ico b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div><div class="n" id="pSrc">0</div><div class="l">Sources</div></div></div>
+        <div class="card stat"><div class="ico g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></div><div><div class="n" id="pTotal">0</div><div class="l">Unique proxies</div></div></div>
+        <div class="card stat"><div class="ico ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5L20 7"/></svg></div><div><div class="n" id="pAlive">0</div><div class="l">Responding</div></div></div>
+        <div class="card stat"><div class="ico bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div><div><div class="n" id="pDead">0</div><div class="l">Dead</div></div></div>
+      </div>
+      <div class="work">
+        <div class="card gold panel">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Sources</h3>
+          <div class="sub">Public proxy lists. Pick which ones to pull from.</div>
+          <div class="row" style="margin:0 0 12px"><button class="btn ghost" id="pAll">Select all</button><button class="btn ghost" id="pNone">Select none</button></div>
+          <div class="srcgrid" id="srcList"></div>
+          <div class="row"><div class="field" style="max-width:160px"><label>Test timeout (ms)</label><input id="pTimeout" type="number" min="1000" value="4000"></div><div style="flex:1"></div>
+            <button class="btn goldb" id="pScrape"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>Scrape</button>
+            <button class="btn blue" id="pTest" disabled>Test proxies</button><button class="btn ghost" id="pStop" disabled>Stop</button></div>
+          <div class="progress"><i id="pBar"></i></div>
+          <div class="ptext"><span id="pTxt">Idle</span><span id="pPct">0%</span></div>
+          <div class="note">Free public proxies are slow, short-lived and run by strangers. Never send passwords or personal info through them. "Responding" means the proxy's port answered in time; it doesn't guarantee the proxy works for every site.</div>
+        </div>
+        <div class="card panel">
+          <div class="results-head">
+            <div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Proxy List</h3><div class="sub" style="margin:0">ip:port, one per line</div></div>
+            <div class="filters"><button class="on" data-pf="all">All</button><button data-pf="alive">Responding</button><button data-pf="http">HTTP</button><button data-pf="socks5">SOCKS5</button></div>
+          </div>
+          <textarea id="pOut" readonly style="height:400px" placeholder="Scraped proxies will appear here"></textarea>
+          <div class="row"><span class="sub" style="margin:0;flex:1" id="pShown">0 shown</span><button class="btn ghost" id="pCopy">Copy</button><button class="btn goldb" id="pExport">Export .txt</button></div>
         </div>
       </div>
     </section>
@@ -447,6 +487,47 @@ document.addEventListener('click',e=>{
 $('#copyVault').onclick=()=>{navigator.clipboard.writeText(vault.map(v=>v.replace(/^dc:/,'discord: ')).join('\n'));toast('Vault copied')};
 $('#exportVault').onclick=async()=>{if(window.api&&await api.exportList(vault.map(v=>v.replace(/^dc:/,'discord: ')).join('\n')))toast('Exported')};
 $('#clearHist').onclick=()=>{history=[];store.set('history',history);renderHistory()};
+
+// ---------- proxy scraper ----------
+let proxies=[], pFilter='all', pStopFlag=false;
+async function initProxies(){
+  if(!window.api)return;
+  const src=await api.proxySources();
+  $('#pSrc').textContent=src.length;
+  $('#srcList').innerHTML=src.map((x,i)=>`<label class="src"><input type="checkbox" checked data-i="${i}"><span>${esc(x.name)}</span><span class="t">${x.type}</span><span class="c" id="pc${i}">—</span></label>`).join('');
+  api.onProxyProgress(d=>{const c=$('#pc'+d.i);c.textContent=d.ok?d.count:'fail';c.className='c '+(d.ok?'ok':'bad')});
+}
+function renderProxies(){
+  const list=proxies.filter(p=>pFilter==='all'||(pFilter==='alive'?p.ok:p.type===pFilter));
+  if(pFilter==='alive')list.sort((a,b)=>a.ms-b.ms);
+  $('#pOut').value=list.map(p=>p.addr).join('\n');$('#pShown').textContent=list.length+' shown';
+  $('#pTotal').textContent=proxies.length;$('#pAlive').textContent=proxies.filter(p=>p.ok).length;$('#pDead').textContent=proxies.filter(p=>p.ok===false).length;
+}
+$('#pAll').onclick=()=>$$('#srcList input').forEach(c=>c.checked=true);
+$('#pNone').onclick=()=>$$('#srcList input').forEach(c=>c.checked=false);
+$('#pScrape').onclick=async()=>{
+  const idx=$$('#srcList input').filter(c=>c.checked).map(c=>+c.dataset.i);
+  if(!idx.length)return toast('Pick at least one source');
+  $$('#srcList .c').forEach(c=>{c.textContent='…';c.className='c'});
+  $('#pScrape').disabled=true;$('#pTxt').textContent=`Pulling from ${idx.length} sources…`;$('#pBar').style.width='100%';
+  proxies=await api.proxyScrape(idx);
+  $('#pScrape').disabled=false;$('#pTest').disabled=!proxies.length;$('#pBar').style.width='0';
+  $('#pTxt').textContent=`${proxies.length} unique proxies found`;renderProxies();toast(`${proxies.length} proxies scraped`);
+};
+$('#pTest').onclick=async()=>{
+  pStopFlag=false;$('#pTest').disabled=true;$('#pScrape').disabled=true;$('#pStop').disabled=false;
+  const t=Math.max(1000,+$('#pTimeout').value||4000);let done=0,i=0;
+  const worker=async()=>{while(i<proxies.length&&!pStopFlag){const p=proxies[i++];const r=await api.proxyTest(p.addr,t);p.ok=r.ok;p.ms=r.ms;done++;
+    if(done%25===0||done===proxies.length){const pc=Math.round(done/proxies.length*100);$('#pBar').style.width=pc+'%';$('#pPct').textContent=pc+'%';$('#pTxt').textContent=`Tested ${done}/${proxies.length}`;renderProxies()}}};
+  await Promise.all(Array.from({length:100},worker));
+  renderProxies();$('#pTxt').textContent=(pStopFlag?'Stopped · ':'Done · ')+proxies.filter(p=>p.ok).length+' responding';
+  $('#pTest').disabled=false;$('#pScrape').disabled=false;$('#pStop').disabled=true;
+};
+$('#pStop').onclick=()=>{pStopFlag=true};
+$$('[data-pf]').forEach(b=>b.onclick=()=>{$$('[data-pf]').forEach(x=>x.classList.toggle('on',x===b));pFilter=b.dataset.pf;renderProxies()});
+$('#pCopy').onclick=()=>{navigator.clipboard.writeText($('#pOut').value);toast('Proxies copied')};
+$('#pExport').onclick=async()=>{if(window.api&&await api.exportList($('#pOut').value))toast('Exported')};
+initProxies();
 
 renderResults();renderStats();
 </script>
