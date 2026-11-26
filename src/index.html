@@ -202,7 +202,8 @@ select option{background:#071433}
     </div>
     <nav class="nav">
       <div class="label">Workspace</div>
-      <button class="on" data-view="checker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Checker</button>
+      <button class="on" data-view="checker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>TikTok</button>
+      <button data-view="checker" data-platform="discord"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7c2.5-1 5.5-1 8 0l1.5 1.5c1.3 2.2 2 4.7 2 7.5-1.5 1.3-3 2-4.5 2.5l-1-2M8 7 6.5 8.5c-1.3 2.2-2 4.7-2 7.5 1.5 1.3 3 2 4.5 2.5l1-2M8.5 16c2.3 1 4.7 1 7 0"/><circle cx="9.5" cy="12.5" r="1"/><circle cx="14.5" cy="12.5" r="1"/></svg>Discord</button>
       <button data-view="vault"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 15 8.5 22 9.3 17 14l1.3 7L12 17.8 5.7 21 7 14 2 9.3l7-.8z"/></svg>Gold Vault</button>
       <button data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
     </nav>
@@ -224,15 +225,15 @@ select option{background:#071433}
       <div class="card gold hero">
         <div class="shine"></div>
         <div>
-          <span class="eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFD700"><path d="M12 2 15 8.5 22 9.3 17 14l1.3 7L12 17.8 5.7 21 7 14 2 9.3l7-.8z"/></svg>TikTok handle intelligence</span>
+          <span class="eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="#FFD700"><path d="M12 2 15 8.5 22 9.3 17 14l1.3 7L12 17.8 5.7 21 7 14 2 9.3l7-.8z"/></svg><span id="eyeTxt">TikTok handle intelligence</span></span>
           <h1>Claim the name<br><span class="grad">before anyone else.</span></h1>
-          <p class="lead">Instantly verify whether a TikTok username is free. Scan one handle, a whole list, or let the generator hunt rare short names for you.</p>
+          <p class="lead">Instantly verify whether a <span id="platName">TikTok</span> username is free. Scan one handle, a whole list, or let the generator hunt rare short names for you.</p>
           <div class="search">
             <span class="at">@</span>
-            <input id="single" placeholder="yourname" maxlength="24" spellcheck="false" autocomplete="off">
+            <input id="single" placeholder="yourname" maxlength="32" spellcheck="false" autocomplete="off">
             <button class="btn goldb" id="singleBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Check</button>
           </div>
-          <div class="hint"><span><kbd>Enter</kbd> to check</span><span>2–24 chars · letters, numbers, _ and .</span></div>
+          <div class="hint"><span><kbd>Enter</kbd> to check</span><span id="rules">2–24 chars · letters, numbers, _ and .</span></div>
         </div>
         <div class="visual">
           <div class="ring"></div><div class="ring r2"></div>
@@ -278,7 +279,7 @@ select option{background:#071433}
           </div>
           <div class="progress"><i id="pbar"></i></div>
           <div class="ptext"><span id="ptxt">Idle</span><span id="ppct">0%</span></div>
-          <div class="note">Results come from TikTok's public profile pages. A handle shown as available may still be banned or reserved by TikTok, so confirm in the app before announcing it.</div>
+          <div class="note" id="srcNote">Results come from TikTok's public profile pages. A handle shown as available may still be banned or reserved by TikTok, so confirm in the app before announcing it.</div>
         </div>
 
         <div class="card panel">
@@ -320,6 +321,9 @@ select option{background:#071433}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 if(window.api&&api.platform==='darwin')document.body.classList.add('mac');
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let platform='tiktok';
+const PLAT={tiktok:{name:'TikTok',eye:'TikTok handle intelligence',rules:'2–24 chars · letters, numbers, _ and .',note:"Results come from TikTok's public profile pages. A handle shown as available may still be banned or reserved by TikTok, so confirm in the app before announcing it."},discord:{name:'Discord',eye:'Discord username intelligence',rules:'2–32 chars · lowercase letters, numbers, _ and .',note:"Results come from Discord's sign-up username check. Discord limits how fast you can check, so keep the delay at 2000 ms or more."}};
+function setPlatform(p){platform=p;const c=PLAT[p];$('#eyeTxt').textContent=c.eye;$('#platName').textContent=c.name;$('#rules').textContent=c.rules;$('#srcNote').textContent=c.note;if(p==='discord'&&+$('#delay').value<2000)$('#delay').value=2000}
 let vault=store.get('vault',[]), history=store.get('history',[]), results=[], filter='all', running=false, stopFlag=false;
 const stats={total:0,free:0,taken:0};
 const label={available:'Available',taken:'Taken',invalid:'Invalid',unknown:'Unclear',error:'Network error',ratelimited:'Rate limited',checking:'Checking'};
@@ -329,19 +333,19 @@ const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&qu
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),2200)}
 function itemHTML(r,opts={}){
-  const inV=vault.includes(r.name);
+  const key=(r.platform==='discord'?'dc:':'')+r.name, inV=vault.includes(key);
   return `<div class="item ${r.status}"><div class="av">${esc(r.name[0]||'?')}</div>
-  <div class="nm">@${esc(r.name)}<small>${r.time?new Date(r.time).toLocaleString():r.name.length+' characters'}</small></div>
+  <div class="nm">@${esc(r.name)}<small>${r.platform==='discord'?'Discord · ':'TikTok · '}${r.time?new Date(r.time).toLocaleString():r.name.length+' characters'}</small></div>
   <span class="badge b-${r.status}">${r.status==='checking'?'<span class="spin"></span> ':''}${label[r.status]}</span>
-  ${r.status==='available'||opts.vault?`<button class="iconbtn" data-star="${esc(r.name)}" title="Vault">${star(inV)}</button>`:''}
-  <button class="iconbtn" data-open="${esc(r.name)}" title="Open on TikTok">${ext}</button></div>`;
+  ${r.status==='available'||opts.vault?`<button class="iconbtn" data-star="${esc(key)}" title="Vault">${star(inV)}</button>`:''}
+  ${r.platform==='discord'?'':`<button class="iconbtn" data-open="${esc(r.name)}" title="Open on TikTok">${ext}</button>`}</div>`;
 }
 function emptyHTML(t,s){return `<div class="empty"><div class="medal">${star(true).replace('<svg','<svg width="34" height="34"')}</div><b>${t}</b>${s}</div>`}
 function renderResults(){
   const list=results.filter(r=>filter==='all'||r.status===filter);
   $('#results').innerHTML=list.length?list.map(r=>itemHTML(r)).join(''):emptyHTML('Nothing scanned yet','Your results will stream in here in real time.');
 }
-function renderVault(){$('#vault').innerHTML=vault.length?vault.map(n=>itemHTML({name:n,status:'available'},{vault:1})).join(''):emptyHTML('Your vault is empty','Star an available handle to keep it here.')}
+function renderVault(){$('#vault').innerHTML=vault.length?vault.map(n=>itemHTML({name:n.replace(/^dc:/,''),platform:n.startsWith('dc:')?'discord':'tiktok',status:'available'},{vault:1})).join(''):emptyHTML('Your vault is empty','Star an available handle to keep it here.')}
 function renderHistory(){$('#history').innerHTML=history.length?history.map(r=>itemHTML(r)).join(''):emptyHTML('No history yet','Every check you run is logged here.')}
 function renderStats(){
   $('#sTotal').textContent=stats.total;$('#sFree').textContent=stats.free;$('#sTaken').textContent=stats.taken;
@@ -354,11 +358,11 @@ function setPhone(name,status){
   const c=$('.chip.c1');c.style.color=status==='available'?'var(--ok)':status==='taken'?'var(--bad)':'var(--warn)';$('#chipText').textContent=label[status];
 }
 async function runCheck(name){
-  const r={name,status:'checking'};results.unshift(r);renderResults();
-  const res=window.api?await api.check(name):{name,status:'unknown'};
-  Object.assign(r,res,{time:Date.now()});
+  const r={name,status:'checking',platform};results.unshift(r);renderResults();
+  const res=window.api?await api.check(name,platform):{name,status:'unknown'};
+  Object.assign(r,res,{time:Date.now(),platform});
   stats.total++; if(r.status==='available')stats.free++; if(r.status==='taken')stats.taken++;
-  history.unshift({name:r.name,status:r.status,time:r.time});history=history.slice(0,500);store.set('history',history);
+  history.unshift({name:r.name,status:r.status,time:r.time,platform});history=history.slice(0,500);store.set('history',history);
   renderResults();renderStats();return r;
 }
 const clean=s=>s.trim().replace(/^@/,'').toLowerCase();
@@ -408,14 +412,14 @@ $('#genBtn').onclick=()=>{
 $('#huntBtn').onclick=async()=>{
   if(running)return;
   running=true;stopFlag=false;$('#huntBtn').disabled=true;$('#scanBtn').disabled=true;$('#stopBtn').disabled=false;
-  const seen=new Set(history.map(h=>h.name));let n=0,found=0;
+  const seen=new Set(history.filter(h=>(h.platform||'tiktok')===platform).map(h=>h.name));let n=0,found=0;
   $('#pbar').style.width='100%';$('#ppct').textContent='∞';
   while(!stopFlag){
     let name,g=0;do{name=genOne()}while(seen.has(name)&&g++<200);
     seen.add(name);n++;
     $('#ptxt').textContent=`Hunting @${name} · ${n} checked · ${found} found`;
     const r=await runCheck(name);
-    if(r.status==='available'&&!vault.includes(name)){found++;vault.unshift(name);store.set('vault',vault);renderResults();renderStats();toast(`Found @${name} ✦ saved to vault`)}
+    const vk=(platform==='discord'?'dc:':'')+name;if(r.status==='available'&&!vault.includes(vk)){found++;vault.unshift(vk);store.set('vault',vault);renderResults();renderStats();toast(`Found @${name} ✦ saved to vault`)}
     if(r.status==='ratelimited'){toast('Rate limited, cooling down 15s');await new Promise(s=>setTimeout(s,15000))}
     await new Promise(s=>setTimeout(s,Math.max(300,+$('#delay').value||900)));
   }
@@ -430,17 +434,18 @@ $$('.nav button').forEach(b=>b.onclick=()=>{
   $$('.nav button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.view));
   $('#crumb').textContent=b.textContent.trim();
+  if(b.dataset.view==='checker'){if(running)stopFlag=true;setPlatform(b.dataset.platform||'tiktok')}
   if(b.dataset.view==='vault')renderVault();if(b.dataset.view==='history')renderHistory();
 });
 
 document.addEventListener('click',e=>{
   const s=e.target.closest('[data-star]'),o=e.target.closest('[data-open]');
   if(s){const n=s.dataset.star;vault=vault.includes(n)?vault.filter(x=>x!==n):[n,...vault];store.set('vault',vault);
-    toast(vault.includes(n)?`@${n} saved to vault`:`@${n} removed`);renderResults();renderVault();renderStats()}
+    const dn=n.replace(/^dc:/,'');toast(vault.includes(n)?`@${dn} saved to vault`:`@${dn} removed`);renderResults();renderVault();renderStats()}
   if(o&&window.api)api.open(o.dataset.open);
 });
-$('#copyVault').onclick=()=>{navigator.clipboard.writeText(vault.join('\n'));toast('Vault copied')};
-$('#exportVault').onclick=async()=>{if(window.api&&await api.exportList(vault.join('\n')))toast('Exported')};
+$('#copyVault').onclick=()=>{navigator.clipboard.writeText(vault.map(v=>v.replace(/^dc:/,'discord: ')).join('\n'));toast('Vault copied')};
+$('#exportVault').onclick=async()=>{if(window.api&&await api.exportList(vault.map(v=>v.replace(/^dc:/,'discord: ')).join('\n')))toast('Exported')};
 $('#clearHist').onclick=()=>{history=[];store.set('history',history);renderHistory()};
 
 renderResults();renderStats();

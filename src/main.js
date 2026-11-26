@@ -37,7 +37,21 @@ async function checkUsername(name) {
   }
 }
 
-ipcMain.handle('check', (_e, name) => checkUsername(name));
+// Discord: the same endpoint the sign-up page uses to say "username taken".
+async function checkDiscord(name) {
+  if (!/^[a-z0-9_.]{2,32}$/.test(name) || name.includes('..')) return { name, status: 'invalid' };
+  try {
+    const res = await fetch('https://discord.com/api/v9/unique-username/username-attempt-unauthed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': UA }, body: JSON.stringify({ username: name })
+    });
+    if (res.status === 429) return { name, status: 'ratelimited' };
+    const data = await res.json();
+    if (typeof data.taken === 'boolean') return { name, status: data.taken ? 'taken' : 'available' };
+    return { name, status: 'unknown' };
+  } catch (e) { return { name, status: 'error', message: e.message }; }
+}
+
+ipcMain.handle('check', (_e, name, platform) => platform === 'discord' ? checkDiscord(name) : checkUsername(name));
 ipcMain.handle('open', (_e, name) => shell.openExternal(`https://www.tiktok.com/@${encodeURIComponent(name)}`));
 ipcMain.handle('export', async (_e, text) => {
   const { filePath } = await dialog.showSaveDialog({ defaultPath: 'available-usernames.txt' });
