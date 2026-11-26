@@ -1,0 +1,26 @@
+{
+  "name": "aurum-handle",
+  "productName": "Aurum Handle",
+  "version": "1.0.0",
+  "description": "Premium TikTok username availability checker",
+  "main": "src/main.js",
+  "author": "Aurum",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable nsis",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist": "electron-builder -mw"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.aurum.handle",
+    "productName": "Aurum Handle",
+    "files": ["src/**/*"],
+    "win": { "target": ["nsis", "portable"] },
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.utilities" }
+  }
+}
