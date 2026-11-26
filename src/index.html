@@ -267,7 +267,8 @@ select option{background:#071433}
               <div class="field"><label>Amount</label><input id="gAmt" type="number" min="1" max="200" value="25"></div>
             </div>
             <div class="row"><div class="field"><label>Keyword (for keyword mode)</label><input id="gWord" placeholder="gold"></div></div>
-            <div class="row"><button class="btn ghost" id="genBtn">Generate into list</button></div>
+            <div class="row"><button class="btn ghost" id="genBtn">Generate into list</button><button class="btn goldb" id="huntBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 8.5 22 9.3 17 14l1.3 7L12 17.8 5.7 21 7 14 2 9.3l7-.8z"/></svg>Auto Hunt</button></div>
+            <div class="note" style="margin-top:12px">Auto Hunt makes new usernames from these settings and checks them nonstop. Available ones go straight to your Gold Vault. Press Stop to end.</div>
           </div>
           <div class="row">
             <div class="field" style="max-width:150px"><label>Delay (ms)</label><input id="delay" type="number" min="300" value="900"></div>
@@ -389,18 +390,37 @@ $('#stopBtn').onclick=()=>{stopFlag=true};
 // generator
 const L='abcdefghijklmnopqrstuvwxyz',N='0123456789',V='aeiou',C='bcdfghjklmnprstvwz';
 const pick=s=>s[Math.floor(Math.random()*s.length)];
+function genOne(){
+  const pat=$('#gPat').value,len=Math.min(12,Math.max(2,+$('#gLen').value||4)),w=clean($('#gWord').value)||'gold';
+  let s='';
+  if(pat==='letters')for(let i=0;i<len;i++)s+=pick(L);
+  else if(pat==='mixed')for(let i=0;i<len;i++)s+=pick(L+N);
+  else if(pat==='cvcv')for(let i=0;i<len;i++)s+=i%2?pick(V):pick(C);
+  else s=w+pick(['','_','.','x'])+pick(['hq','tv','vip','og','lux',pick(N)+pick(N),'official','era','club']);
+  return s;
+}
 $('#genBtn').onclick=()=>{
-  const pat=$('#gPat').value,len=Math.min(12,Math.max(2,+$('#gLen').value||4)),amt=Math.min(200,Math.max(1,+$('#gAmt').value||25)),w=clean($('#gWord').value)||'gold';
+  const amt=Math.min(200,Math.max(1,+$('#gAmt').value||25));
   const out=new Set();let guard=0;
-  while(out.size<amt&&guard++<5000){
-    let s='';
-    if(pat==='letters')for(let i=0;i<len;i++)s+=pick(L);
-    else if(pat==='mixed')for(let i=0;i<len;i++)s+=pick(L+N);
-    else if(pat==='cvcv')for(let i=0;i<len;i++)s+=i%2?pick(V):pick(C);
-    else s=w+pick(['','_','.','x'])+pick(['hq','tv','vip','og','lux',pick(N)+pick(N),'official','era','club']);
-    out.add(s);
-  }
+  while(out.size<amt&&guard++<5000)out.add(genOne());
   $('#bulk').value=[...out].join('\n');$$('.tabs button')[0].click();toast(`${out.size} candidates generated`);
+};
+$('#huntBtn').onclick=async()=>{
+  if(running)return;
+  running=true;stopFlag=false;$('#huntBtn').disabled=true;$('#scanBtn').disabled=true;$('#stopBtn').disabled=false;
+  const seen=new Set(history.map(h=>h.name));let n=0,found=0;
+  $('#pbar').style.width='100%';$('#ppct').textContent='∞';
+  while(!stopFlag){
+    let name,g=0;do{name=genOne()}while(seen.has(name)&&g++<200);
+    seen.add(name);n++;
+    $('#ptxt').textContent=`Hunting @${name} · ${n} checked · ${found} found`;
+    const r=await runCheck(name);
+    if(r.status==='available'&&!vault.includes(name)){found++;vault.unshift(name);store.set('vault',vault);renderResults();renderStats();toast(`Found @${name} ✦ saved to vault`)}
+    if(r.status==='ratelimited'){toast('Rate limited, cooling down 15s');await new Promise(s=>setTimeout(s,15000))}
+    await new Promise(s=>setTimeout(s,Math.max(300,+$('#delay').value||900)));
+  }
+  $('#ptxt').textContent=`Hunt stopped · ${found} found in ${n} checks`;$('#pbar').style.width='0';$('#ppct').textContent='0%';
+  running=false;$('#huntBtn').disabled=false;$('#scanBtn').disabled=false;$('#stopBtn').disabled=true;
 };
 
 // tabs, filters, nav
